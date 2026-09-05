@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/gateway.dir/link.d CMakeFiles/gateway.dir/src/main.cpp.o -o gateway  /usr/lib/x86_64-linux-gnu/libcurl.so /usr/lib/x86_64-linux-gnu/libcurl.so
