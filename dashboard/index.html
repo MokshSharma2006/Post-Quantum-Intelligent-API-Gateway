@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post-Quantum AI API Gateway</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#151e2e',
+                            900: '#0f172a',
+                            950: '#020617',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #020617;
+            background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, transparent 70%);
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+        
+        /* Glassmorphism & Card Styles */
+        .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 10px 40px -10px rgba(99, 102, 241, 0.15);
+        }
+
+        /* Glowing Badges */
+        .badge-glow-emerald {
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+        }
+        
+        .badge-glow-rose {
+            background: rgba(244, 63, 94, 0.1);
+            color: #fb7185;
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            box-shadow: 0 0 10px rgba(244, 63, 94, 0.1);
+        }
+
+        .badge-glow-amber {
+            background: rgba(245, 158, 11, 0.1);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.1);
+        }
+
+        .badge-neutral {
+            background: rgba(100, 116, 139, 0.1);
+            color: #94a3b8;
+            border: 1px solid rgba(100, 116, 139, 0.3);
+        }
+
+        /* Custom Scrollbar for a premium feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569; 
+        }
+    </style>
+</head>
+
+<body class="font-sans antialiased selection:bg-indigo-500/30">
+
+<div class="container mx-auto px-4 md:px-8 py-8 max-w-7xl">
+
+    <!-- HEADER -->
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-bold text-white tracking-tight flex items-center gap-3">
+                <svg class="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>
+                Post-Quantum AI API Gateway
+            </h1>
+            <p class="text-slate-400 mt-2 text-sm md:text-base font-medium">AI-Powered Cybersecurity Monitoring Dashboard</p>
+        </div>
+        
+        <div id="gateway-status" class="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold tracking-wide badge-glow-rose transition-all duration-500">
+            <span class="relative flex h-3 w-3">
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+            </span>
+            ● OFFLINE
+        </div>
+    </header>
+
+    <!-- GATEWAY METRIC CARDS -->
+    <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 mb-8">
+        
+        <div class="glass-card rounded-2xl p-5 relative overflow-hidden">
+            <h3 class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">Total Requests</h3>
+            <div id="total-requests" class="text-3xl font-bold text-white font-mono">0</div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 relative overflow-hidden">
+            <h3 class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">Allowed Requests</h3>
+            <div id="allowed-requests" class="text-3xl font-bold text-emerald-400 font-mono">0</div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 relative overflow-hidden">
+            <h3 class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">Blocked Requests</h3>
+            <div id="blocked-requests" class="text-3xl font-bold text-rose-400 font-mono">0</div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 relative overflow-hidden">
+            <h3 class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">Requests / Sec</h3>
+            <div id="requests-per-second" class="text-3xl font-bold text-cyan-400 font-mono">0.00</div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 relative overflow-hidden col-span-2 md:col-span-1 lg:col-span-1">
+            <h3 class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">AI Blocked Clients</h3>
+            <div id="ai-blocked" class="text-3xl font-bold text-amber-400 font-mono">0</div>
+        </div>
+
+    </section>
+
+    <!-- AI SECURITY OVERVIEW -->
+    <section class="glass-card rounded-2xl p-6 mb-8">
+        <div class="flex justify-between items-center mb-6 border-b border-slate-700/50 pb-4">
+            <h2 class="text-lg md:text-xl font-bold text-white flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                AI Security Overview
+            </h2>
+            <div class="flex items-center gap-2 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div> LIVE
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            
+            <div class="bg-slate-800/40 rounded-xl p-4 border border-slate-700/50 flex flex-col items-center justify-center text-center">
+                <h3 class="text-sm font-medium text-slate-400 mb-2">Normal</h3>
+                <div id="ai-normal" class="text-2xl font-bold text-emerald-400 font-mono mb-1">0</div>
+                <p class="text-xs text-slate-500">Normal requests</p>
+            </div>
+
+            <div class="bg-slate-800/40 rounded-xl p-4 border border-slate-700/50 flex flex-col items-center justify-center text-center">
+                <h3 class="text-sm font-medium text-slate-400 mb-2">Suspicious</h3>
+                <div id="ai-suspicious" class="text-2xl font-bold text-amber-400 font-mono mb-1">0</div>
+                <p class="text-xs text-slate-500">Suspicious requests</p>
+            </div>
+
+            <div class="bg-slate-800/40 rounded-xl p-4 border border-slate-700/50 flex flex-col items-center justify-center text-center">
+                <h3 class="text-sm font-medium text-slate-400 mb-2">Malicious</h3>
+                <div id="ai-malicious" class="text-2xl font-bold text-rose-400 font-mono mb-1">0</div>
+                <p class="text-xs text-slate-500">Malicious requests</p>
+            </div>
+
+            <div class="bg-indigo-900/20 rounded-xl p-4 border border-indigo-500/20 flex flex-col items-center justify-center text-center">
+                <h3 class="text-sm font-medium text-indigo-300 mb-2">AI Blocks</h3>
+                <div id="ai-block-decisions" class="text-2xl font-bold text-indigo-400 font-mono mb-1">0</div>
+                <p class="text-xs text-indigo-400/60">AI block decisions</p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- PANELS GRID -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        
+        <!-- AI DECISION PANEL (Col 1 & 2) -->
+        <div class="glass-card rounded-2xl p-6 lg:col-span-2 flex flex-col">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-700/50 pb-4">
+                <h2 class="text-lg font-bold text-white">Latest AI Decision</h2>
+                <span class="text-xs font-bold text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded border border-cyan-500/20 tracking-wider">REAL-TIME</span>
+            </div>
+
+            <div class="flex-grow flex flex-col justify-center gap-2">
+                <div class="flex justify-between items-center py-3 border-b border-slate-700/30">
+                    <span class="text-slate-400 font-medium">Anomaly Score</span>
+                    <strong id="ai-score" class="font-mono text-lg text-white">0 / 100</strong>
+                </div>
+                
+                <div class="flex justify-between items-center py-3 border-b border-slate-700/30">
+                    <span class="text-slate-400 font-medium">Threat Level</span>
+                    <span id="ai-threat" class="px-3 py-1 rounded-full text-xs font-bold tracking-wider badge-neutral">NONE</span>
+                </div>
+                
+                <div class="flex justify-between items-center py-3 border-b border-slate-700/30">
+                    <span class="text-slate-400 font-medium">Action</span>
+                    <span id="ai-action" class="px-3 py-1 rounded-full text-xs font-bold tracking-wider badge-neutral">NONE</span>
+                </div>
+
+                <div class="flex justify-between items-center py-3 border-b border-slate-700/30">
+                    <span class="text-slate-400 font-medium">AI Decisions</span>
+                    <strong id="ai-total-decisions" class="font-mono text-lg text-white">0</strong>
+                </div>
+
+                <div class="flex justify-between items-center py-3">
+                    <span class="text-slate-400 font-medium">Currently Blocked</span>
+                    <strong id="ai-currently-blocked" class="font-mono text-lg text-white">0</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECURITY STATUS (Col 3) -->
+        <div class="glass-card rounded-2xl p-6 flex flex-col">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-700/50 pb-4">
+                <h2 class="text-lg font-bold text-white">Security Status</h2>
+            </div>
+            
+            <div class="flex flex-col gap-3 mt-2">
+                <div class="flex justify-between items-center p-3 bg-slate-800/30 rounded-lg border border-slate-700/30">
+                    <span class="text-sm font-medium text-slate-300">AI Security Engine</span>
+                    <span id="ai-status" class="px-2 py-1 rounded text-xs font-bold badge-neutral">PENDING</span>
+                </div>
+                
+                <div class="flex justify-between items-center p-3 bg-slate-800/30 rounded-lg border border-slate-700/30">
+                    <span class="text-sm font-medium text-slate-300">Rate Limiter</span>
+                    <span id="rate-status" class="px-2 py-1 rounded text-xs font-bold badge-neutral">PENDING</span>
+                </div>
+                
+                <div class="flex justify-between items-center p-3 bg-slate-800/30 rounded-lg border border-slate-700/30">
+                    <span class="text-sm font-medium text-slate-300">ZeroMQ</span>
+                    <span id="zmq-status" class="px-2 py-1 rounded text-xs font-bold badge-neutral">PENDING</span>
+                </div>
+                
+                <div class="flex justify-between items-center p-3 bg-slate-800/30 rounded-lg border border-slate-700/30">
+                    <span class="text-sm font-medium text-slate-300">AI Enforcement</span>
+                    <span id="enforcement-status" class="px-2 py-1 rounded text-xs font-bold badge-neutral">PENDING</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CHARTS GRID -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        
+        <!-- TRAFFIC MONITOR -->
+        <div class="glass-card rounded-2xl p-6 flex flex-col h-[400px]">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-white">Traffic Monitor</h2>
+                <span class="text-xs font-bold text-emerald-400">LIVE</span>
+            </div>
+            <div class="relative flex-grow w-full h-full">
+                <canvas id="trafficChart"></canvas>
+            </div>
+        </div>
+
+        <!-- THREAT DISTRIBUTION -->
+        <div class="glass-card rounded-2xl p-6 flex flex-col h-[400px]">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-white">AI Threat Distribution</h2>
+                <span class="text-xs font-bold text-emerald-400">LIVE</span>
+            </div>
+            <div class="relative flex-grow w-full h-full flex justify-center pb-4">
+                <canvas id="threatChart"></canvas>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- POST-QUANTUM SECURITY -->
+    <section class="glass-card rounded-2xl p-6 mb-8">
+        
+        <div class="flex justify-between items-center mb-6 border-b border-slate-700/50 pb-4">
+            <h2 class="text-lg font-bold text-white">Post-Quantum Cryptography</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-5">
+                <h3 class="text-white font-bold text-lg mb-1">ML-KEM-768</h3>
+                <p class="text-slate-400 text-sm mb-4">Key Encapsulation Mechanism</p>
+                <span id="kem-status" class="inline-block px-3 py-1 rounded text-xs font-bold badge-neutral">PENDING</span>
+            </div>
+
+            <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-5">
+                <h3 class="text-white font-bold text-lg mb-1">ML-DSA-65</h3>
+                <p class="text-slate-400 text-sm mb-4">Digital Signature</p>
+                <span id="signature-status" class="inline-block px-3 py-1 rounded text-xs font-bold badge-neutral">PENDING</span>
+            </div>
+
+            <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-5">
+                <h3 class="text-white font-bold text-lg mb-1">PQC Handshake</h3>
+                <p class="text-slate-400 text-sm mb-4">ML-KEM + ML-DSA</p>
+                <span id="handshake-status" class="inline-block px-3 py-1 rounded text-xs font-bold badge-neutral">PENDING</span>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="flex flex-col md:flex-row justify-between items-center text-slate-500 text-xs py-4 border-t border-slate-800/50 mt-12">
+        <span>Post-Quantum AI-Powered API Gateway</span>
+        <span class="flex items-center gap-1 mt-2 md:mt-0">
+            <svg class="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            Auto-refresh: 2 seconds
+        </span>
+    </footer>
+
+</div>
+
+<script>
+    // ============================================================
+    // CONFIGURATION
+    // ============================================================
+    const GATEWAY_URL = "http://localhost:8080";
+
+    // Chart.js Global Settings for Dark Theme
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.font.family = 'Inter, sans-serif';
+    Chart.defaults.borderColor = 'rgba(51, 65, 85, 0.3)';
+
+    // ============================================================
+    // TRAFFIC CHART DATA & SETUP
+    // ============================================================
+    const labels = [];
+    const requestData = [];
+    const blockedData = [];
+
+    const trafficCanvas = document.getElementById("trafficChart");
+    const trafficCtx = trafficCanvas.getContext("2d");
+
+    const trafficChart = new Chart(trafficCtx, {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: "Requests/sec",
+                    data: requestData,
+                    borderColor: '#06b6d4', // Cyan
+                    backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 2,
+                    pointHoverRadius: 5
+                },
+                {
+                    label: "Blocked",
+                    data: blockedData,
+                    borderColor: '#f43f5e', // Rose
+                    backgroundColor: 'rgba(244, 63, 94, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 2,
+                    pointHoverRadius: 5
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    grid: { display: false }
+                },
+                y: {
+                    beginAtZero: true,
+                    border: { display: false }
+                }
+            },
+            plugins: {
+                legend: { 
+                    display: true,
+                    position: 'top',
+                    labels: { usePointStyle: true, boxWidth: 10 }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    titleColor: '#fff',
+                    padding: 10,
+                    cornerRadius: 8,
+                    borderColor: 'rgba(51, 65, 85, 0.5)',
+                    borderWidth: 1
+                }
+            }
+        }
+    });
+
+    // ============================================================
+    // THREAT DISTRIBUTION CHART
+    // ============================================================
+    const threatLabels = ["Normal", "Suspicious", "Malicious"];
+    const threatData = [0, 0, 0];
+
+    const threatCanvas = document.getElementById("threatChart");
+    const threatCtx = threatCanvas.getContext("2d");
+
+    const threatChart = new Chart(threatCtx, {
+        type: "doughnut",
+        data: {
+            labels: threatLabels,
+            datasets: [{
+                label: "AI Threat Distribution",
+                data: threatData,
+                backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: { 
+                    display: true, 
+                    position: 'bottom',
+                    labels: { usePointStyle: true, padding: 20, boxWidth: 10 }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    padding: 10,
+                    cornerRadius: 8
+                }
+            }
+        }
+    });
+
+    // ============================================================
+    // UPDATE CHARTS FUNCTIONS
+    // ============================================================
+    function updateTrafficChart(requestsPerSecond, blockedRequests) {
+        const now = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+
+        labels.push(now);
+        requestData.push(requestsPerSecond);
+        blockedData.push(blockedRequests);
+
+        // Keep last 20 points
+        if (labels.length > 20) {
+            labels.shift();
+            requestData.shift();
+            blockedData.shift();
+        }
+
+        trafficChart.update('none'); // Update without animation so it streams cleanly
+    }
+
+    function updateThreatChart(normal, suspicious, malicious) {
+        threatData[0] = Number(normal);
+        threatData[1] = Number(suspicious);
+        threatData[2] = Number(malicious);
+        threatChart.update();
+    }
+
+    // ============================================================
+    // BADGE HELPER FUNCTIONS
+    // ============================================================
+    function updateThreatBadge(elementId, threat) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        element.textContent = threat || "NONE";
+        element.className = "px-3 py-1 rounded-full text-xs font-bold tracking-wider transition-all ";
+
+        if (threat === "MALICIOUS") element.className += "badge-glow-rose";
+        else if (threat === "SUSPICIOUS") element.className += "badge-glow-amber";
+        else if (threat === "NORMAL") element.className += "badge-glow-emerald";
+        else element.className += "badge-neutral";
+    }
+
+    function updateActionBadge(elementId, action) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        element.textContent = action || "NONE";
+        element.className = "px-3 py-1 rounded-full text-xs font-bold tracking-wider transition-all ";
+
+        if (action === "BLOCK") element.className += "badge-glow-rose";
+        else if (action === "MONITOR") element.className += "badge-glow-amber";
+        else if (action === "ALLOW") element.className += "badge-glow-emerald";
+        else element.className += "badge-neutral";
+    }
+
+    function setBadge(elementId, active) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        if (active) {
+            element.textContent = "ACTIVE";
+            element.className = "px-2 py-1 rounded text-xs font-bold badge-glow-emerald";
+        } else {
+            element.textContent = "OFFLINE";
+            element.className = "px-2 py-1 rounded text-xs font-bold badge-glow-rose";
+        }
+    }
+
+    // ============================================================
+    // FETCH AND UPDATE METRICS
+    // ============================================================
+    async function updateMetrics() {
+        try {
+            const response = await fetch(`${GATEWAY_URL}/metrics`);
+            if (!response.ok) throw new Error("Metrics request failed");
+            const data = await response.json();
+
+            // Gateway Metrics
+            document.getElementById("total-requests").textContent = data.total_requests;
+            document.getElementById("allowed-requests").textContent = data.allowed_requests;
+            document.getElementById("blocked-requests").textContent = data.blocked_requests;
+            document.getElementById("requests-per-second").textContent = Number(data.requests_per_second).toFixed(2);
+            document.getElementById("ai-blocked").textContent = data.ai_blocked_clients;
+
+            // AI Security Overview
+            document.getElementById("ai-normal").textContent = data.ai_normal;
+            document.getElementById("ai-suspicious").textContent = data.ai_suspicious;
+            document.getElementById("ai-malicious").textContent = data.ai_malicious;
+            document.getElementById("ai-block-decisions").textContent = data.ai_block_decisions;
+
+            // Latest AI Decision
+            document.getElementById("ai-score").textContent = `${data.ai_last_score} / 100`;
+            updateThreatBadge("ai-threat", data.ai_last_threat);
+            updateActionBadge("ai-action", data.ai_last_action);
+            document.getElementById("ai-total-decisions").textContent = data.ai_total_decisions;
+            document.getElementById("ai-currently-blocked").textContent = data.ai_blocked_clients;
+
+            // Update Charts
+            updateTrafficChart(Number(data.requests_per_second), Number(data.blocked_requests));
+            updateThreatChart(Number(data.ai_normal), Number(data.ai_suspicious), Number(data.ai_malicious));
+
+        } catch (error) {
+            console.error("Metrics error:", error);
+        }
+    }
+
+    // ============================================================
+    // FETCH AND UPDATE HEALTH
+    // ============================================================
+    async function updateHealth() {
+        try {
+            const response = await fetch(`${GATEWAY_URL}/health`);
+            if (!response.ok) throw new Error("Health request failed");
+            const data = await response.json();
+
+            // Gateway Status Banner
+            const gatewayStatus = document.getElementById("gateway-status");
+            gatewayStatus.innerHTML = `<span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span></span> SYSTEM ONLINE`;
+            gatewayStatus.className = "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold tracking-wide badge-glow-emerald transition-all duration-500";
+
+            // Security Status
+            setBadge("ai-status", data.ai_enforcement === "enabled");
+            setBadge("rate-status", data.rate_limiter === "enabled");
+            setBadge("zmq-status", data.zeromq === "enabled");
+            setBadge("enforcement-status", data.ai_enforcement === "enabled");
+
+            // PQC Status
+            setBadge("kem-status", data.kem === "ML-KEM-768");
+            setBadge("signature-status", data.signature === "ML-DSA-65");
+            setBadge("handshake-status", data.pqc === "healthy");
+
+        } catch (error) {
+            console.error("Health error:", error);
+            
+            // Set Gateway Offline
+            const gatewayStatus = document.getElementById("gateway-status");
+            gatewayStatus.innerHTML = `<span class="relative flex h-3 w-3"><span class="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span></span> OFFLINE`;
+            gatewayStatus.className = "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold tracking-wide badge-glow-rose transition-all duration-500";
+            
+            // Optionally, we could set all panels to offline on fetch failure
+            setBadge("ai-status", false);
+            setBadge("rate-status", false);
+            setBadge("zmq-status", false);
+            setBadge("enforcement-status", false);
+            setBadge("kem-status", false);
+            setBadge("signature-status", false);
+            setBadge("handshake-status", false);
+        }
+    }
+
+    // ============================================================
+    // INITIALIZATION & INTERVALS
+    // ============================================================
+    
+    // Initial fetch on load
+    updateMetrics();
+    updateHealth();
+
+    // Set 2-second auto-refresh intervals exactly as requested
+    setInterval(updateMetrics, 2000);
+    setInterval(updateHealth, 2000);
+
+</script>
+
+</body>
+</html> 

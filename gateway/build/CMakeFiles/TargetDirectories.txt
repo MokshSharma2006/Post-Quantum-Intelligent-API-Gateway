@@ -1,3 +1,0 @@
-/root/post-quantum-api-gateway/gateway/build/CMakeFiles/gateway.dir
-/root/post-quantum-api-gateway/gateway/build/CMakeFiles/edit_cache.dir
-/root/post-quantum-api-gateway/gateway/build/CMakeFiles/rebuild_cache.dir

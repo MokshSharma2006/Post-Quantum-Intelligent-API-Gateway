@@ -1,7 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/root/post-quantum-api-gateway/gateway/build/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
