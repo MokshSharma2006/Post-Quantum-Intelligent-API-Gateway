@@ -7,6 +7,8 @@
 #include <vector>
 #include <regex>
 #include <utility>
+#include <algorithm>
+#include <cctype>
 
 #include <curl/curl.h>
 #include <openssl/sha.h>
@@ -175,6 +177,155 @@ std::string escape_json_string(
     return output;
 }
 
+// ============================================================
+// SYNCHRONOUS SECURITY PRE-FILTER
+// ============================================================
+//
+// Fast deterministic check performed inside the C++ gateway
+// before the request is forwarded to the backend.
+//
+// This is NOT a replacement for the AI security engine.
+// It provides an immediate first layer for obvious attacks.
+//
+// ============================================================
+
+std::string detect_obvious_attack(
+    const std::string& input
+)
+{
+    if (input.empty())
+    {
+        return "NONE";
+    }
+
+    std::string value = input;
+
+    // Convert to lowercase for case-insensitive matching
+    std::transform(
+        value.begin(),
+        value.end(),
+        value.begin(),
+        [](unsigned char c)
+        {
+            return static_cast<char>(
+                std::tolower(c)
+            );
+        }
+    );
+
+
+    // --------------------------------------------------------
+    // SQL Injection
+    // --------------------------------------------------------
+
+    const std::vector<std::string> sql_patterns =
+    {
+        "' or 1=1",
+        "\" or 1=1",
+        "' or '1'='1",
+        "\" or \"1\"=\"1",
+        "union select",
+        "union all select",
+        "drop table",
+        "insert into",
+        "delete from",
+        "update set",
+        "select * from",
+        "';--",
+        "\";--"
+    };
+
+    for (const auto& pattern : sql_patterns)
+    {
+        if (value.find(pattern) != std::string::npos)
+        {
+            return "SQL_INJECTION";
+        }
+    }
+
+
+    // --------------------------------------------------------
+    // Command Injection
+    // --------------------------------------------------------
+
+    const std::vector<std::string> command_patterns =
+    {
+        "&& whoami",
+        "&& id",
+        "&& cat /etc/passwd",
+        "; whoami",
+        "; id",
+        "| whoami",
+        "| id",
+        "$(whoami)",
+        "`whoami`",
+        "$(id)",
+        "`id`",
+        "cmd.exe",
+        "powershell.exe",
+        "/bin/bash",
+        "/bin/sh"
+    };
+
+    for (const auto& pattern : command_patterns)
+    {
+        if (value.find(pattern) != std::string::npos)
+        {
+            return "COMMAND_INJECTION";
+        }
+    }
+
+
+    // --------------------------------------------------------
+    // Path Traversal
+    // --------------------------------------------------------
+
+    const std::vector<std::string> traversal_patterns =
+    {
+        "../",
+        "..\\",
+        "%2e%2e%2f",
+        "%2e%2e/",
+        "..%2f",
+        "%2e%2e%5c",
+        "..%5c"
+    };
+
+    for (const auto& pattern : traversal_patterns)
+    {
+        if (value.find(pattern) != std::string::npos)
+        {
+            return "PATH_TRAVERSAL";
+        }
+    }
+
+
+    // --------------------------------------------------------
+    // Script Injection
+    // --------------------------------------------------------
+
+    const std::vector<std::string> script_patterns =
+    {
+        "<script",
+        "javascript:",
+        "onerror=",
+        "onload=",
+        "<iframe",
+        "<object",
+        "<embed"
+    };
+
+    for (const auto& pattern : script_patterns)
+    {
+        if (value.find(pattern) != std::string::npos)
+        {
+            return "SCRIPT_INJECTION";
+        }
+    }
+
+
+    return "NONE";
+}
 
 // ============================================================
 // SANITIZE REQUEST BODY
@@ -1262,6 +1413,35 @@ int main()
             method = "GET";
         }
 
+        // ----------------------------------------------------
+        // Synchronous security pre-filter
+        // ----------------------------------------------------
+
+        std::string prefilter_attack =
+            detect_obvious_attack(
+                req.body
+            );
+
+        if (
+            prefilter_attack != "NONE"
+        )
+        {
+            metrics.record_blocked();
+
+            std::cout
+                << "[PRE-FILTER BLOCK] "
+                << client_ip
+                 << " -> /api/data"
+                << " | Attack: "
+                << prefilter_attack
+                << std::endl;
+
+            return crow::response(
+                403,
+                "Request blocked by gateway pre-filter: "
+                + prefilter_attack
+            );
+        }
 
         // ----------------------------------------------------
         // Sanitize request body before AI transmission
