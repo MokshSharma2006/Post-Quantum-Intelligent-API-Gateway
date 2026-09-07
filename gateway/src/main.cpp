@@ -886,6 +886,45 @@ int main()
     // PQC INFORMATION
     // ========================================================
 
+    // ========================================================
+    // RESET METRICS
+    // ========================================================
+
+    CROW_ROUTE(
+        app,
+        "/metrics/reset"
+    )
+    .methods(crow::HTTPMethod::POST)
+    ([]()
+    {
+        // Reset gateway request metrics
+        metrics.reset();
+
+        // Reset rate-limiter state
+        rate_limiter.reset();
+
+        // Reset AI statistics, payload state,
+        // and active AI blocklist
+        ai_enforcement.reset();
+
+        crow::json::wvalue response;
+
+        response["status"] =
+            "reset";
+
+        response["message"] =
+            "Security metrics and AI state reset successfully";
+
+        return crow::response(
+            response
+        );
+    });
+
+
+    // ========================================================
+    // PQC INFORMATION
+    // ========================================================
+
     CROW_ROUTE(
         app,
         "/pq/info"

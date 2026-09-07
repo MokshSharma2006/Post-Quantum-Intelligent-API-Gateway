@@ -35,6 +35,20 @@ public:
     }
 
 
+    // ========================================================
+    // RESET ALL CLIENT RATE-LIMIT STATE
+    // ========================================================
+
+    void reset()
+    {
+        std::lock_guard<std::mutex> lock(
+            clients_mutex
+        );
+
+        clients.clear();
+    }
+
+
     bool allow_request(
         const std::string& client_ip
     )

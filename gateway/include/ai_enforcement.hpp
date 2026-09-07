@@ -102,6 +102,42 @@ public:
 
 
     // ========================================================
+    // RESET AI SECURITY STATE
+    // ========================================================
+
+    void reset()
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+
+        // Clear blocked clients
+        blocked_clients.clear();
+
+        // Reset AI statistics
+        total_decisions = 0;
+        normal_decisions = 0;
+        suspicious_decisions = 0;
+        malicious_decisions = 0;
+        block_decisions = 0;
+
+        // Reset last AI decision
+        last_threat_score = 0;
+        last_threat_level = "NONE";
+        last_action = "NONE";
+
+        // Reset last LLM result
+        last_attack_type = "NONE";
+        last_severity = "NONE";
+        last_confidence = 0;
+        last_recommendation = "NONE";
+        last_explanation = "NONE";
+
+        // Reset payload intelligence
+        last_payload_score = 0;
+        last_payload_indicators.clear();
+    }
+
+
+    // ========================================================
     // RECORD AI DECISION
     // ========================================================
 

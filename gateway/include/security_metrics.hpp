@@ -54,6 +54,21 @@ public:
 
 
     // ========================================================
+    // RESET ALL METRICS
+    // ========================================================
+
+    void reset()
+    {
+        total_requests.store(0);
+        allowed_requests.store(0);
+        blocked_requests.store(0);
+
+        start_time =
+            std::chrono::steady_clock::now();
+    }
+
+
+    // ========================================================
     // GET TOTAL REQUESTS
     // ========================================================
 

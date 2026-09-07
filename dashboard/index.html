@@ -117,11 +117,27 @@
             <p class="text-slate-400 mt-2 text-sm md:text-base font-medium">AI-Powered Cybersecurity Monitoring Dashboard</p>
         </div>
         
-        <div id="gateway-status" class="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold tracking-wide badge-glow-rose transition-all duration-500">
-            <span class="relative flex h-3 w-3">
-              <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
-            </span>
-            ● OFFLINE
+        <div class="flex items-center gap-3">
+            <button
+                id="reset-metrics-btn"
+                type="button"
+                onclick="resetMetrics()"
+                class="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold tracking-wide text-slate-300 bg-slate-800/70 border border-slate-700 hover:border-indigo-500/50 hover:text-white hover:bg-slate-800 transition-all duration-300"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 4v5h5M20 20v-5h-5M5.64 18.36A9 9 0 0018.36 5.64M18.36 18.36A9 9 0 005.64 5.64">
+                    </path>
+                </svg>
+                RESET METRICS
+            </button>
+
+            <div id="gateway-status" class="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold tracking-wide badge-glow-rose transition-all duration-500">
+                <span class="relative flex h-3 w-3">
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                </span>
+                ● OFFLINE
+            </div>
         </div>
     </header>
 
@@ -602,6 +618,81 @@
             setBadge("handshake-status", false);
         }
     }
+
+    // ============================================================
+    // RESET METRICS
+    // ============================================================
+
+    async function resetMetrics() {
+        const confirmed = confirm(
+            "Reset all gateway security metrics and AI state?"
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        const button = document.getElementById("reset-metrics-btn");
+
+        try {
+            button.disabled = true;
+            button.innerHTML = `
+                <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 3v3m6.364.636l-2.121 2.121M21 12h-3m-.636 6.364l-2.121-2.121M12 21v-3m-6.364-.636l2.121-2.121M3 12h3m.636-6.364l2.121 2.121">
+                    </path>
+                </svg>
+                RESETTING...
+            `;
+
+            const response = await fetch(
+                `${GATEWAY_URL}/metrics/reset`,
+                {
+                    method: "POST"
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Reset request failed");
+            }
+
+            // Clear chart history so old metrics do not remain visible.
+            labels.length = 0;
+            requestData.length = 0;
+            blockedData.length = 0;
+
+            trafficChart.update();
+
+            threatData[0] = 0;
+            threatData[1] = 0;
+            threatData[2] = 0;
+
+            threatChart.update();
+
+            // Immediately fetch the newly reset metrics.
+            await updateMetrics();
+
+            console.log("Security metrics reset successfully.");
+
+        } catch (error) {
+            console.error("Reset metrics error:", error);
+            alert(
+                "Failed to reset metrics. Make sure the gateway is running."
+            );
+        } finally {
+            button.disabled = false;
+
+            button.innerHTML = `
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 4v5h5M20 20v-5h-5M5.64 18.36A9 9 0 0018.36 5.64M18.36 18.36A9 9 0 005.64 5.64">
+                    </path>
+                </svg>
+                RESET METRICS
+            `;
+        }
+    }
+
 
     // ============================================================
     // INITIALIZATION & INTERVALS
