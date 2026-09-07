@@ -1,9 +1,0 @@
-wsl --distribution Ubuntu
-
-python3 backend/app.py
-
-python3 ai/security_engine.py
-
-root@Moksh:~/post-quantum-api-gateway/gateway/build# ./gateway
-
-python3 -m http.server 3000 --directory dashboard --bind 0.0.0.0
