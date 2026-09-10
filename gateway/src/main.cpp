@@ -19,6 +19,7 @@
 #include "zmq_client.hpp"
 #include "ai_enforcement.hpp"
 #include "ai_decision_receiver.hpp"
+#include "security_event_log.hpp"
 
 
 // ============================================================
@@ -45,6 +46,8 @@ PQCManager pqc_manager;
 ZMQClient zmq_client;
 
 AIEnforcement ai_enforcement;
+
+SecurityEventLog security_event_log;
 
 AIDecisionReceiver ai_receiver(
     ai_enforcement
@@ -1037,6 +1040,68 @@ int main()
     // PQC INFORMATION
     // ========================================================
 
+
+    // ========================================================
+    // SECURITY EVENTS
+    // ========================================================
+
+    CROW_ROUTE(
+        app,
+        "/events"
+    )
+    ([]()
+    {
+        crow::json::wvalue response;
+
+        auto events =
+            security_event_log.get_events();
+
+        response["count"] =
+            static_cast<int>(
+                events.size()
+            );
+
+        crow::json::wvalue::list event_list;
+
+        for (
+            const auto& event :
+            events
+        )
+        {
+            crow::json::wvalue item;
+
+            item["timestamp"] =
+                event.timestamp;
+
+            item["client_ip"] =
+                event.client_ip;
+
+            item["endpoint"] =
+                event.endpoint;
+
+            item["event_type"] =
+                event.event_type;
+
+            item["action"] =
+                event.action;
+
+            item["attack_type"] =
+                event.attack_type;
+
+            event_list.push_back(
+                std::move(item)
+            );
+        }
+
+        response["events"] =
+            std::move(event_list);
+
+        return crow::response(
+            response
+        );
+    });
+
+
     // ========================================================
     // RESET METRICS
     // ========================================================
@@ -1057,6 +1122,9 @@ int main()
         // Reset AI statistics, payload state,
         // and active AI blocklist
         ai_enforcement.reset();
+
+        // Reset real-time security event log
+        security_event_log.reset();
 
         crow::json::wvalue response;
 
@@ -1270,6 +1338,14 @@ int main()
         {
             metrics.record_blocked();
 
+            security_event_log.record_event(
+                client_ip,
+                "/api/hello",
+                "AI_BLOCK",
+                "BLOCK",
+                ai_enforcement.get_last_attack_type()
+            );
+
             std::cout
                 << "[AI BLOCK] "
                 << client_ip
@@ -1317,6 +1393,14 @@ int main()
         {
             metrics.record_blocked();
 
+            security_event_log.record_event(
+                client_ip,
+                "/api/hello",
+                "RATE_LIMIT",
+                "BLOCK",
+                "NONE"
+            );
+
             std::cout
                 << "[RATE LIMIT] "
                 << client_ip
@@ -1335,6 +1419,14 @@ int main()
         // ----------------------------------------------------
 
         metrics.record_allowed();
+
+        security_event_log.record_event(
+            client_ip,
+            "/api/hello",
+            "NORMAL_REQUEST",
+            "ALLOW",
+            "NONE"
+        );
 
         return proxy_to_backend(
             req,
@@ -1382,6 +1474,14 @@ int main()
         {
             metrics.record_blocked();
 
+            security_event_log.record_event(
+                client_ip,
+                "/api/data",
+                "AI_BLOCK",
+                "BLOCK",
+                ai_enforcement.get_last_attack_type()
+            );
+
             std::cout
                 << "[AI BLOCK] "
                 << client_ip
@@ -1427,6 +1527,14 @@ int main()
         )
         {
             metrics.record_blocked();
+
+            security_event_log.record_event(
+                client_ip,
+                "/api/data",
+                "PRE_FILTER_BLOCK",
+                "BLOCK",
+                prefilter_attack
+            );
 
             std::cout
                 << "[PRE-FILTER BLOCK] "
@@ -1483,6 +1591,14 @@ int main()
         {
             metrics.record_blocked();
 
+            security_event_log.record_event(
+                client_ip,
+                "/api/data",
+                "RATE_LIMIT",
+                "BLOCK",
+                "NONE"
+            );
+
             std::cout
                 << "[RATE LIMIT] "
                 << client_ip
@@ -1501,6 +1617,14 @@ int main()
         // ----------------------------------------------------
 
         metrics.record_allowed();
+
+        security_event_log.record_event(
+            client_ip,
+            "/api/data",
+            "NORMAL_REQUEST",
+            "ALLOW",
+            "NONE"
+        );
 
         return proxy_to_backend(
             req,
