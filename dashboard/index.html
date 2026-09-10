@@ -101,84 +101,10 @@
             background: #475569; 
         }
 
-        /* Real-Time Security Event Log */
-        .event-row {
-            transition: background-color 0.2s ease;
+        /* AI Explainability */
+        #ai-explanation {
+            word-break: break-word;
         }
-
-        .event-row:hover {
-            background: rgba(30, 41, 59, 0.45);
-        }
-
-        .event-table-wrap {
-            max-height: 360px;
-            overflow-y: auto;
-        }
-
-        .event-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .event-table th {
-            position: sticky;
-            top: 0;
-            z-index: 1;
-            background: #0f172a;
-            color: #94a3b8;
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            padding: 0.75rem 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid rgba(51, 65, 85, 0.5);
-        }
-
-        .event-table td {
-            padding: 0.75rem;
-            border-bottom: 1px solid rgba(51, 65, 85, 0.3);
-            font-size: 0.78rem;
-            white-space: nowrap;
-        }
-
-        .event-empty {
-            text-align: center;
-            color: #64748b;
-            padding: 2rem 1rem !important;
-        }
-
-        .event-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.2rem 0.5rem;
-            border-radius: 9999px;
-            font-size: 0.65rem;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            border: 1px solid rgba(100, 116, 139, 0.3);
-            background: rgba(100, 116, 139, 0.1);
-            color: #94a3b8;
-        }
-
-        .event-badge.block {
-            border-color: rgba(244, 63, 94, 0.3);
-            background: rgba(244, 63, 94, 0.1);
-            color: #fb7185;
-        }
-
-        .event-badge.allow {
-            border-color: rgba(16, 185, 129, 0.3);
-            background: rgba(16, 185, 129, 0.1);
-            color: #34d399;
-        }
-
-        .event-badge.monitor {
-            border-color: rgba(245, 158, 11, 0.3);
-            background: rgba(245, 158, 11, 0.1);
-            color: #fbbf24;
-        }
-
     </style>
 </head>
 
@@ -291,52 +217,6 @@
         </div>
     </section>
 
-
-    <!-- REAL-TIME SECURITY EVENT LOG -->
-    <section class="glass-card rounded-2xl p-6 mb-8">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-slate-700/50 pb-4 gap-3">
-            <div>
-                <h2 class="text-lg md:text-xl font-bold text-white flex items-center gap-2">
-                    <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V7a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2z">
-                        </path>
-                    </svg>
-                    Real-Time Security Events
-                </h2>
-                <p class="text-xs text-slate-500 mt-1">Latest gateway security activity</p>
-            </div>
-
-            <div class="flex items-center gap-2">
-                <span id="event-count"
-                    class="text-xs font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
-                    0 EVENTS
-                </span>
-                <span class="text-xs font-bold text-emerald-400">LIVE</span>
-            </div>
-        </div>
-
-        <div class="event-table-wrap overflow-x-auto rounded-xl border border-slate-700/40">
-            <table class="event-table">
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>Client IP</th>
-                        <th>Endpoint</th>
-                        <th>Event</th>
-                        <th>Action</th>
-                        <th>Attack Type</th>
-                    </tr>
-                </thead>
-                <tbody id="security-events-body">
-                    <tr>
-                        <td colspan="6" class="event-empty">Waiting for security events...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
-
     <!-- PANELS GRID -->
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         
@@ -371,6 +251,34 @@
                 <div class="flex justify-between items-center py-3">
                     <span class="text-slate-400 font-medium">Currently Blocked</span>
                     <strong id="ai-currently-blocked" class="font-mono text-lg text-white">0</strong>
+                </div>
+
+                <!-- AI EXPLAINABILITY -->
+                <div class="mt-4 pt-4 border-t border-slate-700/50">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-slate-400 font-medium">AI Explanation</span>
+                        <span id="ai-provider"
+                              class="text-xs font-bold text-indigo-300 bg-indigo-500/10 px-2 py-1 rounded border border-indigo-500/20">
+                            DETERMINISTIC
+                        </span>
+                    </div>
+
+                    <div id="ai-explanation"
+                         class="bg-slate-950/50 border border-slate-700/40 rounded-xl p-4 text-sm text-slate-300 leading-relaxed min-h-[72px]">
+                        Waiting for AI decision...
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                        <div class="bg-slate-800/30 rounded-lg p-3 border border-slate-700/30">
+                            <div class="text-xs text-slate-500 uppercase tracking-wider mb-1">Payload Score</div>
+                            <div id="ai-payload-score" class="font-mono text-white">0 / 60</div>
+                        </div>
+
+                        <div class="bg-slate-800/30 rounded-lg p-3 border border-slate-700/30">
+                            <div class="text-xs text-slate-500 uppercase tracking-wider mb-1">Indicators</div>
+                            <div id="ai-payload-indicators" class="font-mono text-slate-300 break-words">NONE</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -691,6 +599,28 @@
             document.getElementById("ai-total-decisions").textContent = data.ai_total_decisions;
             document.getElementById("ai-currently-blocked").textContent = data.ai_blocked_clients;
 
+            // AI Explainability
+            const explanation = data.llm_explanation || "No AI explanation available.";
+            document.getElementById("ai-explanation").textContent = explanation;
+
+            const provider = data.llm_enabled
+                ? (data.llm_provider || "LLM").toUpperCase()
+                : "DETERMINISTIC";
+
+            document.getElementById("ai-provider").textContent = provider;
+
+            document.getElementById("ai-payload-score").textContent =
+                `${Number(data.payload_score || 0)} / 60`;
+
+            const indicators = Array.isArray(data.payload_indicators)
+                ? data.payload_indicators
+                : [];
+
+            document.getElementById("ai-payload-indicators").textContent =
+                indicators.length > 0
+                    ? indicators.join(", ")
+                    : "NONE";
+
             // Update Charts
             updateTrafficChart(Number(data.requests_per_second), Number(data.blocked_requests));
             updateThreatChart(Number(data.ai_normal), Number(data.ai_suspicious), Number(data.ai_malicious));
@@ -744,70 +674,6 @@
         }
     }
 
-
-    // ============================================================
-    // SECURITY EVENT LOG
-    // ============================================================
-
-    function eventBadgeClass(value) {
-        if (value === "BLOCK") return "event-badge block";
-        if (value === "ALLOW") return "event-badge allow";
-        if (value === "MONITOR") return "event-badge monitor";
-        return "event-badge";
-    }
-
-    function escapeHtml(value) {
-        return String(value ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
-
-    async function updateSecurityEvents() {
-        try {
-            const response = await fetch(`${GATEWAY_URL}/events`);
-            if (!response.ok) throw new Error("Events request failed");
-
-            const data = await response.json();
-            const events = Array.isArray(data.events) ? data.events : [];
-
-            const countElement = document.getElementById("event-count");
-            const bodyElement = document.getElementById("security-events-body");
-
-            countElement.textContent = `${events.length} EVENT${events.length === 1 ? "" : "S"}`;
-
-            if (events.length === 0) {
-                bodyElement.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="event-empty">No security events recorded.</td>
-                    </tr>
-                `;
-                return;
-            }
-
-            // Show newest events first while keeping the gateway's full history intact.
-            const visibleEvents = [...events].reverse().slice(0, 25);
-
-            bodyElement.innerHTML = visibleEvents.map(event => `
-                <tr class="event-row">
-                    <td class="font-mono text-slate-400">${escapeHtml(event.timestamp)}</td>
-                    <td class="font-mono text-slate-300">${escapeHtml(event.client_ip)}</td>
-                    <td class="font-mono text-cyan-300">${escapeHtml(event.endpoint)}</td>
-                    <td class="font-semibold text-slate-200">${escapeHtml(event.event_type)}</td>
-                    <td>
-                        <span class="${eventBadgeClass(event.action)}">${escapeHtml(event.action || "NONE")}</span>
-                    </td>
-                    <td class="text-slate-400">${escapeHtml(event.attack_type || "NONE")}</td>
-                </tr>
-            `).join("");
-
-        } catch (error) {
-            console.error("Security events error:", error);
-        }
-    }
-
     // ============================================================
     // RESET METRICS
     // ============================================================
@@ -858,11 +724,20 @@
 
             threatChart.update();
 
-            // Immediately fetch the newly reset metrics and event log.
-            await updateMetrics();
-            await updateSecurityEvents();
+            // Clear AI explainability fields.
+            document.getElementById("ai-explanation").textContent =
+                "Waiting for AI decision...";
+            document.getElementById("ai-provider").textContent =
+                "DETERMINISTIC";
+            document.getElementById("ai-payload-score").textContent =
+                "0 / 60";
+            document.getElementById("ai-payload-indicators").textContent =
+                "NONE";
 
-            console.log("Security metrics and event log reset successfully.");
+            // Immediately fetch the newly reset metrics.
+            await updateMetrics();
+
+            console.log("Security metrics reset successfully.");
 
         } catch (error) {
             console.error("Reset metrics error:", error);
@@ -891,12 +766,10 @@
     // Initial fetch on load
     updateMetrics();
     updateHealth();
-    updateSecurityEvents();
 
     // Set 2-second auto-refresh intervals exactly as requested
     setInterval(updateMetrics, 2000);
     setInterval(updateHealth, 2000);
-    setInterval(updateSecurityEvents, 2000);
 
 </script>
 
