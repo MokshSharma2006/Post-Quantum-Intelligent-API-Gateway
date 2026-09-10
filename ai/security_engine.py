@@ -815,6 +815,183 @@ class SecurityAnalyzer:
         }
 
 
+
+# ============================================================
+# AI DECISION EXPLANATION
+# ============================================================
+
+def build_decision_explanation(
+    result
+):
+    """
+    Build a deterministic explanation from the security
+    engine's own scoring evidence.
+
+    This is not an LLM-generated explanation. It explains
+    exactly which signals produced the final decision.
+    """
+
+    score = result.get(
+        "anomaly_score",
+        0
+    )
+
+    threat_level = result.get(
+        "threat_level",
+        "NORMAL"
+    )
+
+    action = result.get(
+        "action",
+        "ALLOW"
+    )
+
+    request_count = result.get(
+        "request_count",
+        0
+    )
+
+    requests_per_second = result.get(
+        "requests_per_second",
+        0
+    )
+
+    burst_score = result.get(
+        "burst_score",
+        0
+    )
+
+    payload_score = result.get(
+        "payload_score",
+        0
+    )
+
+    reasons = result.get(
+        "reasons",
+        []
+    )
+
+    payload_indicators = result.get(
+        "payload_indicators",
+        []
+    )
+
+
+    # --------------------------------------------------------
+    # Build evidence lines
+    # --------------------------------------------------------
+
+    evidence = []
+
+
+    if request_count >= 20:
+        evidence.append(
+            f"Very high request frequency "
+            f"({request_count} requests in the analysis window, +30)"
+        )
+
+    elif request_count >= 10:
+        evidence.append(
+            f"Elevated request frequency "
+            f"({request_count} requests in the analysis window, +15)"
+        )
+
+
+    if requests_per_second >= 2:
+        evidence.append(
+            f"High request rate "
+            f"({requests_per_second} requests/sec, +15)"
+        )
+
+
+    if burst_score > 0:
+        evidence.append(
+            f"Burst traffic detected "
+            f"(burst score +{burst_score})"
+        )
+
+
+    if result.get(
+        "unknown_endpoint",
+        False
+    ):
+        evidence.append(
+            "Unknown API endpoint (+25)"
+        )
+
+
+    if result.get(
+        "unknown_method",
+        False
+    ):
+        evidence.append(
+            "Unexpected HTTP method (+15)"
+        )
+
+
+    if result.get(
+        "repeated_requests",
+        False
+    ):
+        evidence.append(
+            "Repeated requests to the same endpoint (+10)"
+        )
+
+
+    for indicator in payload_indicators:
+        evidence.append(
+            f"{indicator} "
+            f"(payload score contribution)"
+        )
+
+
+    # --------------------------------------------------------
+    # Fallback to analyzer reasons
+    # --------------------------------------------------------
+
+    if not evidence and reasons:
+        evidence.extend(
+            reasons
+        )
+
+
+    # --------------------------------------------------------
+    # Build explanation
+    # --------------------------------------------------------
+
+    if threat_level == "NORMAL":
+
+        return (
+            f"Risk score: {score}/100. "
+            "No significant behavioral or payload indicators "
+            "were detected. The request was classified as "
+            "NORMAL and ALLOWED."
+        )
+
+
+    if evidence:
+
+        evidence_text = "; ".join(
+            evidence
+        )
+
+        return (
+            f"Risk score: {score}/100. "
+            f"Evidence: {evidence_text}. "
+            f"The request was classified as "
+            f"{threat_level} and {action}ED."
+        )
+
+
+    return (
+        f"Risk score: {score}/100. "
+        f"The request was classified as "
+        f"{threat_level} and {action}ED "
+        "based on the deterministic security rules."
+    )
+
+
+
 # ============================================================
 # REQUEST BODY SANITIZATION
 # ============================================================
@@ -1182,7 +1359,9 @@ def main():
                     "NONE",
 
                 "explanation":
-                    "LLM analysis not required"
+                    build_decision_explanation(
+                        result
+                    )
             }
 
 
@@ -1276,6 +1455,21 @@ def main():
                         )
 
 
+                        # ------------------------------------------------
+                        # Preserve deterministic explainability when
+                        # Gemini is disabled or unavailable.
+                        # ------------------------------------------------
+                        if not llm_result.get(
+                            "enabled",
+                            False
+                        ):
+                            llm_result["explanation"] = (
+                                build_decision_explanation(
+                                    result
+                                )
+                            )
+
+
                         # ========================================
                         # DISPLAY GEMINI RESULT
                         # ========================================
@@ -1358,7 +1552,9 @@ def main():
                                 "MONITOR",
 
                             "explanation":
-                                "LLM analysis failed"
+                                build_decision_explanation(
+                                    result
+                                )
                         }
 
 
@@ -1366,6 +1562,12 @@ def main():
 
                     print(
                         "Skipped - Gemini cooldown active"
+                    )
+
+                    llm_result["explanation"] = (
+                        build_decision_explanation(
+                            result
+                        )
                     )
 
 
@@ -1478,6 +1680,49 @@ def main():
                 "payload_indicators":
                     result[
                         "payload_indicators"
+                    ],
+
+                # --------------------------------------------
+                # Deterministic explainability
+                # --------------------------------------------
+                "deterministic_explanation":
+                    build_decision_explanation(
+                        result
+                    ),
+
+                "reasons":
+                    result[
+                        "reasons"
+                    ],
+
+                "request_count":
+                    result[
+                        "request_count"
+                    ],
+
+                "requests_per_second":
+                    result[
+                        "requests_per_second"
+                    ],
+
+                "burst_score":
+                    result[
+                        "burst_score"
+                    ],
+
+                "unknown_endpoint":
+                    result[
+                        "unknown_endpoint"
+                    ],
+
+                "unknown_method":
+                    result[
+                        "unknown_method"
+                    ],
+
+                "repeated_requests":
+                    result[
+                        "repeated_requests"
                     ]
             }
 
