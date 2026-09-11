@@ -631,7 +631,7 @@ can be combined in one API-security architecture:
 
 **Post-quantum cryptography + deterministic filtering + rate limiting +
 AI anomaly/payload analysis + automated enforcement + security
-telemetry + real-time visualization.**
+telemetry + real-time visualization.***
 
 It is therefore suitable as a cybersecurity/AI capstone demonstration
 showing both defensive security engineering and practical system
