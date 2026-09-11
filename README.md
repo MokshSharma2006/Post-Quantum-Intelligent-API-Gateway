@@ -624,15 +624,3 @@ git push origin main
 The repository should remain free of secrets, build artifacts, `.venv`,
 logs, and Windows `Zone.Identifier` files.
 
-## 20. Conclusion
-
-The completed system demonstrates how several modern security techniques
-can be combined in one API-security architecture:
-
-**Post-quantum cryptography + deterministic filtering + rate limiting +
-AI anomaly/payload analysis + automated enforcement + security
-telemetry + real-time visualization.***
-
-It is therefore suitable as a cybersecurity/AI capstone demonstration
-showing both defensive security engineering and practical system
-integration.
