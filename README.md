@@ -622,4 +622,4 @@ git push origin main
 ```
 
 The repository should remain free of secrets, build artifacts, `.venv`,
-logs, and Windows `Zone.Identifier` files
+logs, and Windows `Zone.Identifier` files.
